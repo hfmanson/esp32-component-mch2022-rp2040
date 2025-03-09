@@ -33,7 +33,7 @@ enum {
     RP2040_REG_CHARGING_STATE,
     RP2040_REG_ADC_VALUE_TEMP_LO,
     RP2040_REG_ADC_VALUE_TEMP_HI,
-    RP2040_REG_UID0, // Unique board identifier of the RP2040
+    RP2040_REG_UID0,  // Unique board identifier of the RP2040
     RP2040_REG_UID1,
     RP2040_REG_UID2,
     RP2040_REG_UID3,
@@ -194,17 +194,17 @@ enum {
 typedef void (*rp2040_intr_t)();
 
 typedef struct {
-    int              i2c_bus;
-    int              i2c_address;
-    int              pin_interrupt;
-    xQueueHandle     queue;
-    xSemaphoreHandle i2c_semaphore;
-    rp2040_intr_t    _intr_handler;
-    TaskHandle_t     _intr_task_handle;
-    xSemaphoreHandle _intr_trigger;
-    uint8_t          _gpio_direction;
-    uint8_t          _gpio_value;
-    uint8_t          _fw_version;
+    int               i2c_bus;
+    int               i2c_address;
+    int               pin_interrupt;
+    QueueHandle_t     queue;
+    SemaphoreHandle_t i2c_semaphore;
+    rp2040_intr_t     _intr_handler;
+    TaskHandle_t      _intr_task_handle;
+    SemaphoreHandle_t _intr_trigger;
+    uint8_t           _gpio_direction;
+    uint8_t           _gpio_value;
+    uint8_t           _fw_version;
 } RP2040;
 
 typedef struct _rp2040_input_message {

@@ -12,49 +12,88 @@
 
 static const char* TAG = "RP2040";
 
-esp_err_t rp2040_read_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t value_len) {
+esp_err_t rp2040_read_reg(RP2040* device, uint8_t reg, uint8_t* value, size_t value_len) {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    esp_err_t res = i2c_master_start(cmd);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    res = i2c_master_write_byte(cmd, ( device->i2c_address << 1 ) | I2C_MASTER_WRITE, true);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    res = i2c_master_write_byte(cmd, reg, true);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    res = i2c_master_start(cmd);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    res = i2c_master_write_byte(cmd, ( device->i2c_address << 1 ) | I2C_MASTER_READ, true);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    if (value_len > 1) {
-        res = i2c_master_read(cmd, value, value_len-1, false);
-        if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    esp_err_t        res = i2c_master_start(cmd);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
     }
-    res = i2c_master_read_byte(cmd, &value[value_len-1], true);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_write_byte(cmd, (device->i2c_address << 1) | I2C_MASTER_WRITE, true);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
+    res = i2c_master_write_byte(cmd, reg, true);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
+    res = i2c_master_start(cmd);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
+    res = i2c_master_write_byte(cmd, (device->i2c_address << 1) | I2C_MASTER_READ, true);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
+    if (value_len > 1) {
+        res = i2c_master_read(cmd, value, value_len - 1, false);
+        if (res != ESP_OK) {
+            i2c_cmd_link_delete(cmd);
+            return res;
+        }
+    }
+    res = i2c_master_read_byte(cmd, &value[value_len - 1], true);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
     res = i2c_master_stop(cmd);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
     if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
-    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 500 / portTICK_RATE_MS);
+    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 500 / portTICK_PERIOD_MS);
     if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
     i2c_cmd_link_delete(cmd);
     return res;
 }
 
-esp_err_t rp2040_write_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t value_len) {
+esp_err_t rp2040_write_reg(RP2040* device, uint8_t reg, uint8_t* value, size_t value_len) {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    esp_err_t res = i2c_master_start(cmd);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    res = i2c_master_write_byte(cmd, ( device->i2c_address << 1 ) | I2C_MASTER_WRITE, true);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    esp_err_t        res = i2c_master_start(cmd);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
+    res = i2c_master_write_byte(cmd, (device->i2c_address << 1) | I2C_MASTER_WRITE, true);
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
     res = i2c_master_write_byte(cmd, reg, true);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
     for (size_t i = 0; i < value_len; i++) {
         res = i2c_master_write_byte(cmd, value[i], true);
-        if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+        if (res != ESP_OK) {
+            i2c_cmd_link_delete(cmd);
+            return res;
+        }
     }
     res = i2c_master_stop(cmd);
-    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    if (res != ESP_OK) {
+        i2c_cmd_link_delete(cmd);
+        return res;
+    }
     if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
-    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 500 / portTICK_RATE_MS);
+    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 500 / portTICK_PERIOD_MS);
     if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
     i2c_cmd_link_delete(cmd);
     return res;
@@ -247,7 +286,7 @@ esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid) {
     return rp2040_read_reg(device, RP2040_REG_UID0, uid, 8);
 }
 
-const float conversion_factor = 3.3f / (1 << 12); // 12-bit ADC with 3.3v vref
+const float conversion_factor = 3.3f / (1 << 12);  // 12-bit ADC with 3.3v vref
 
 esp_err_t rp2040_read_vbat_raw(RP2040* device, uint16_t* value) {
     if ((device->_fw_version < 0x02) || (device->_fw_version == 0xFF)) return ESP_FAIL;
@@ -255,10 +294,10 @@ esp_err_t rp2040_read_vbat_raw(RP2040* device, uint16_t* value) {
 }
 
 esp_err_t rp2040_read_vbat(RP2040* device, float* value) {
-    uint16_t raw;
+    uint16_t  raw;
     esp_err_t res = rp2040_read_vbat_raw(device, &raw);
     if (res != ESP_OK) return res;
-    *value =  raw * conversion_factor * 2; // Connected through 100k/100k divider
+    *value = raw * conversion_factor * 2;  // Connected through 100k/100k divider
     return res;
 }
 
@@ -268,10 +307,10 @@ esp_err_t rp2040_read_vusb_raw(RP2040* device, uint16_t* value) {
 }
 
 esp_err_t rp2040_read_vusb(RP2040* device, float* value) {
-    uint16_t raw;
+    uint16_t  raw;
     esp_err_t res = rp2040_read_vusb_raw(device, &raw);
     if (res != ESP_OK) return res;
-    *value = raw * conversion_factor * 2; // Connected through 100k/100k divider
+    *value = raw * conversion_factor * 2;  // Connected through 100k/100k divider
     return res;
 }
 
@@ -309,10 +348,10 @@ esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug) {
 esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
     if ((device->_fw_version < 0x06) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t buffer[4];
-    buffer[0] = address & 0xFF; // Address low byte
-    buffer[1] = address >> 8; // Address high byte
-    buffer[2] = command; // Command
-    buffer[3] = 0x01; // Trigger
+    buffer[0] = address & 0xFF;  // Address low byte
+    buffer[1] = address >> 8;    // Address high byte
+    buffer[2] = command;         // Command
+    buffer[3] = 0x01;            // Trigger
     return rp2040_write_reg(device, RP2040_REG_IR_ADDRESS_LO, buffer, sizeof(buffer));
 }
 
